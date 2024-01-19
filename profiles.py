@@ -49,6 +49,7 @@ def read_file_to_array(file_path):
     return lines
 
 def create_profile_from_file(queue,use_proxy,queue_position):
+        
         with lock:
             account = queue.get()
             proxy = queue_proxy.get()
@@ -72,8 +73,12 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                 try:
                     login_=login(driver=driver,username=username,password=password)
                 except:
-                    with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                    with open('logs.txt', 'a',encoding='utf-8') as file:
                         file.write(f'{account}\nLỗi mail\n')
+                        file.write("-------------------\n")
+                        file.close
+                    with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                        file.write(f'{account}\n')
                         file.write("-------------------\n")
                         file.close
                     driver.quit()
@@ -85,8 +90,12 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                 time.sleep(10)
                 current_url2 = driver.current_url
                 if '//accounts.google.com' in current_url2:
-                    with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                    with open('logs.txt', 'a',encoding='utf-8') as file:
                         file.write(f'{account}\nLỗi mail\n')
+                        file.write("-------------------\n")
+                        file.close
+                    with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                        file.write(f'{account}\n')
                         file.write("-------------------\n")
                         file.close
                     driver.quit()
@@ -442,6 +451,34 @@ def write_flag(txt):
 def action_create(use_proxy,numthread):
     write_flag('1')
     path_mail='gmail.txt'
+    path_profile="Profiles"
+    path_proxy="proxy.txt"
+    len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
+    len_mail=read_file_to_queue(file_path=path_mail,queue=queue_mail)
+    min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    while min_value>0:
+        
+        if use_proxy==0:
+            process_mail(queue=queue_mail, queue_proxy=queue_proxy,use_proxy= use_proxy, num_threads=len_mail)
+            delete_profile(path_profile)
+        if use_proxy==1:
+            if len_mail > len_proxy:
+                while len_mail>0:
+                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_proxy)
+                    delete_profile(path_profile)
+                    read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
+                    len_mail=len_mail-len_proxy
+            elif len_mail < len_proxy:
+                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
+                delete_profile(path_profile)
+            elif len_mail == len_proxy:
+                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
+            min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    delete_profile(path_profile)
+
+def action_create_forerror(use_proxy,numthread):
+    write_flag('1')
+    path_mail='mail_error.txt'
     path_profile="Profiles"
     path_proxy="proxy.txt"
     len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)

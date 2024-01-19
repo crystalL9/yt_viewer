@@ -1,2 +1,4 @@
-selenium
-undetected_chromedriver
+selenium==4.2.0
+selenium-wire==5.1.0
+subprocess
+PyQt6==6.6.1

@@ -10,8 +10,6 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import profiles
 import subprocess
 import sys
-import login
-import tkinter as tk
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -333,6 +331,7 @@ class Ui_MainWindow(object):
         self.bt_import_key.clicked.connect(self.input_keyword)
         self.bt_running.clicked.connect(self.watch_video)
         self.bt_exit.clicked.connect(self.exit)
+        self.bt_login_mail_error.clicked.connect(self.create_profile_error)
     def open_folder(self):
         try:
             if sys.platform == 'win32':
@@ -375,6 +374,13 @@ class Ui_MainWindow(object):
         else:
             useproxy=0
         profiles.action_create(use_proxy=useproxy,numthread=numthreads)
+    def create_profile_error(self):
+        numthreads = self.spb_num_thread.value()
+        if self.rd_yes_proxy.isChecked():
+            useproxy=1
+        else:
+            useproxy=0
+        profiles.action_create_forerror(use_proxy=useproxy,numthread=numthreads)
 
 
     def retranslateUi(self, MainWindow):
@@ -414,9 +420,6 @@ class Ui_MainWindow(object):
 
 
 if __name__ == "__main__":
-    login_status=1
-    login.show_login_dialog(login_status=login_status)
-    print(login_status)
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()

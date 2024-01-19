@@ -1,7 +1,6 @@
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.proxy import Proxy, ProxyType
-import pyautogui
 import time
 from seleniumwire import webdriver
 class ChromeDriver:
