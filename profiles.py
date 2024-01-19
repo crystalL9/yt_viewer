@@ -203,9 +203,9 @@ def manager_profiles_watch_search(queue,keywords,start_time,end_time,queue_posit
     random.shuffle(link_keywords)
     proxy=check_proxy_in_profile(profile_path)
     if proxy!=None:
-        useproxy=1
+        use_proxy=1
     else:
-        useproxy=0
+        use_proxy=0
     while len(link_keywords) > 0:
         if start_time>end_time:
             print ("Lỗi thời gian xem")
@@ -359,7 +359,7 @@ def process_mail(queue, use_proxy, num_threads):
     for thread in threads:
         thread.join()
 
-def all_profiles_action(path_profile,queue,mode,links,keywords,start_time,end_time,num_threads,flag):
+def all_profiles_action(path_profile,queue,mode,links,keywords,start_time,end_time,num_threads):
     get_all_profile(path_profile,queue)
     len_profile = queue.qsize()
     queue_position = Queue()
@@ -429,54 +429,51 @@ def read_flag():
         return f"không tìm thấy."
     except Exception as e:
         return f"Có lỗi xảy ra: {e}" 
-def write_flag():
+def write_flag(txt):
     try:
         with open('flag', 'w') as file:
-            file.write('1')
+            file.write(txt)
             file.close()
     except FileNotFoundError:
         return f" không tìm thấy."
     except Exception as e:
         return f"Có lỗi xảy ra: {e}" 
-if __name__ == "__main__":
-    write_flag()
+
+def action_create(use_proxy,numthread):
+    write_flag('1')
+    path_mail='gmail.txt'
+    path_profile="Profiles"
+    path_proxy="proxy.txt"
+    len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
+    len_mail=read_file_to_queue(file_path=path_mail,queue=queue_mail)
+    min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    while min_value>0:
+        
+        if use_proxy==0:
+            process_mail(queue=queue_mail, queue_proxy=queue_proxy,use_proxy= use_proxy, num_threads=len_mail)
+            delete_profile(path_profile)
+        if use_proxy==1:
+            if len_mail > len_proxy:
+                while len_mail>0:
+                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_proxy)
+                    delete_profile(path_profile)
+                    read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
+                    len_mail=len_mail-len_proxy
+            elif len_mail < len_proxy:
+                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
+                delete_profile(path_profile)
+            elif len_mail == len_proxy:
+                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
+            min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    delete_profile(path_profile)
+
+def action_watch_or_del(mode,start_time,end_time,num_threads):
+    write_flag('1')
     path_mail='gmail.txt'
     path_profile="Profiles"
     path_proxy="proxy.txt"
     path_keyword="keyword.txt"
     path_link="link-video.txt"
-    mode = 4
-    start_time=10
-    end_time=20
-
-    use_proxy=1
-
-    len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
-    len_mail=read_file_to_queue(file_path=path_mail,queue=queue_mail)
-
     links = read_file_to_array(file_path=path_keyword)
     keywords = read_file_to_array(file_path=path_link)
-    # if use_proxy==0:
-    #     process_mail(queue=queue_mail, queue_proxy=queue_proxy,use_proxy= use_proxy, num_threads=len_mail)
-    #     delete_profile(path_profile)
-    # if use_proxy==1:
-    #     if len_mail > len_proxy:
-    #         while len_mail>0:
-    #             process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_proxy)
-    #             delete_profile(path_profile)
-    #             read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
-    #             len_mail=len_mail-len_proxy
-    #     elif len_mail < len_proxy:
-    #         process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-    #         delete_profile(path_profile)
-    #     elif len_mail == len_proxy:
-    #         process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-    #         delete_profile(path_profile)
-    
-    
-    #all_profiles_action(path_profile,queue_profile,mode=mode,links=links,keywords=keywords,start_time=start_time,end_time=end_time)
-    open_file_with_notepad("link-video.txt")
-    print(read_flag())
-    # list_profile=list_subdirectories(path_profile)
-    # print(list_profile)
-    #process_mail(queue_mail, path_mail)
+    all_profiles_action(path_profile,queue_profile,mode=mode,links=links,keywords=keywords,start_time=start_time,end_time=end_time,num_threads=num_threads)
