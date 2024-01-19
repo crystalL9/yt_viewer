@@ -24,10 +24,16 @@ lock = threading.Lock()
 queue_proxy= Queue()
 flag=1
 
-def read_file_to_queue(file_path,queue):
+def read_file_to_queue(file_path, queue):
+    unique_values = set()
+
     with open(file_path, 'r') as file:
         for line in file:
-            queue.put(line.strip())
+            value = line.strip()
+            if value not in unique_values:
+                queue.put(value)
+                unique_values.add(value)
+
     return queue.qsize()
 
 def get_all_profile(folder_path,queue):
@@ -79,7 +85,6 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                         file.close
                     with open('mail_error.txt', 'a',encoding='utf-8') as file:
                         file.write(f'{account}\n')
-                        file.write("-------------------\n")
                         file.close
                     driver.quit()
                     return 0
@@ -96,7 +101,6 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                         file.close
                     with open('mail_error.txt', 'a',encoding='utf-8') as file:
                         file.write(f'{account}\n')
-                        file.write("-------------------\n")
                         file.close
                     driver.quit()
                 else:
@@ -104,14 +108,16 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                     driver.quit()
                     mail(profile_path,username,password,proxy)
             except Exception as e:
-                with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                    with open('logs.txt', 'a',encoding='utf-8') as file:
                         file.write(f'{account}\nLỗi mail\n')
                         file.write("-------------------\n")
                         file.close
-                driver.quit()
-                if not path.exists(profile_path):
-                    print(f"Create Profile Fail: {username}")
-                return 0
+                    with open('mail_error.txt', 'a',encoding='utf-8') as file:
+                        file.write(f'{account}\n')
+                        file.close
+                    driver.quit()
+            if not path.exists(profile_path):
+                print(f"Create Profile Fail: {username}")
 
 def mail(path,username,password,proxy):
     if proxy!=None:
@@ -358,9 +364,9 @@ def process_mail(queue, use_proxy, num_threads):
     threads = []
     queue_position = Queue()
     x=2000
-    for i in num_threads:
+    for i in range(num_threads):
          queue_position.put(f'--window-position={x},0"')
-         x=x+10
+         x=x+100
     for _ in range(num_threads):
         thread = threading.Thread(target=create_profile_from_file, args=(queue,use_proxy,queue_position))
         threads.append(thread)
@@ -455,26 +461,24 @@ def action_create(use_proxy,numthread):
     path_proxy="proxy.txt"
     len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
     len_mail=read_file_to_queue(file_path=path_mail,queue=queue_mail)
-    min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    min_value = min(queue_mail.qsize(),int(numthread))
+    min_value2 = min(queue_mail.qsize(),int(numthread))
     while min_value>0:
         
         if use_proxy==0:
-            process_mail(queue=queue_mail, queue_proxy=queue_proxy,use_proxy= use_proxy, num_threads=len_mail)
+            process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=min_value)
             delete_profile(path_profile)
         if use_proxy==1:
-            if len_mail > len_proxy:
-                while len_mail>0:
-                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_proxy)
-                    delete_profile(path_profile)
+                min2=min(len_proxy,min_value2)
+                while min2>0:
+                    
+                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=min2)
                     read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
-                    len_mail=len_mail-len_proxy
-            elif len_mail < len_proxy:
-                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-                delete_profile(path_profile)
-            elif len_mail == len_proxy:
-                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-            min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+                    min2=min2-min_value2
+        min_value = min(queue_mail.qsize(), numthread)
+        delete_profile(path_profile)
     delete_profile(path_profile)
+    
 
 def action_create_forerror(use_proxy,numthread):
     write_flag('1')
@@ -483,25 +487,22 @@ def action_create_forerror(use_proxy,numthread):
     path_proxy="proxy.txt"
     len_proxy=read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
     len_mail=read_file_to_queue(file_path=path_mail,queue=queue_mail)
-    min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+    min_value = min(queue_mail.qsize(),int(numthread))
+    min_value2 = min(queue_mail.qsize(),int(numthread))
     while min_value>0:
         
         if use_proxy==0:
-            process_mail(queue=queue_mail, queue_proxy=queue_proxy,use_proxy= use_proxy, num_threads=len_mail)
+            process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=min_value)
             delete_profile(path_profile)
         if use_proxy==1:
-            if len_mail > len_proxy:
-                while len_mail>0:
-                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_proxy)
-                    delete_profile(path_profile)
+                min2=min(len_proxy,min_value2)
+                while min2>0:
+                    
+                    process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=min2)
                     read_file_to_queue(file_path=path_proxy,queue=queue_proxy)
-                    len_mail=len_mail-len_proxy
-            elif len_mail < len_proxy:
-                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-                delete_profile(path_profile)
-            elif len_mail == len_proxy:
-                process_mail(queue=queue_mail,use_proxy= use_proxy, num_threads=len_mail)
-            min_value = min(queue_mail.qsize(), queue_proxy.qsize, numthread)
+                    min2=min2-min_value2
+        min_value = min(queue_mail.qsize(), numthread)
+        delete_profile(path_profile)
     delete_profile(path_profile)
 
 def action_watch_or_del(mode,start_time,end_time,num_threads):
@@ -514,3 +515,5 @@ def action_watch_or_del(mode,start_time,end_time,num_threads):
     links = read_file_to_array(file_path=path_keyword)
     keywords = read_file_to_array(file_path=path_link)
     all_profiles_action(path_profile,queue_profile,mode=mode,links=links,keywords=keywords,start_time=start_time,end_time=end_time,num_threads=num_threads)
+if __name__ == "__main__":
+    action_create_forerror(numthread=2,use_proxy=1)

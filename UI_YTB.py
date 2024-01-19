@@ -369,6 +369,7 @@ class Ui_MainWindow(object):
             profiles.action_watch_or_del(mode=3,end_time=endtime,start_time=startime,num_threads=numthreads)
     def create_profile(self):
         numthreads = self.spb_num_thread.value()
+        print(numthreads)
         if self.rd_yes_proxy.isChecked():
             useproxy=1
         else:
@@ -376,12 +377,12 @@ class Ui_MainWindow(object):
         profiles.action_create(use_proxy=useproxy,numthread=numthreads)
     def create_profile_error(self):
         numthreads = self.spb_num_thread.value()
+        print(numthreads)
         if self.rd_yes_proxy.isChecked():
             useproxy=1
         else:
             useproxy=0
         profiles.action_create_forerror(use_proxy=useproxy,numthread=numthreads)
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
