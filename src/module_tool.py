@@ -19,9 +19,8 @@ def delete_profile(folder_path):
             if not os.path.exists(login_file_path):
                 try:
                     rmtree(current_folder)
-                    return True
                 except:
-                    return False
+                    pass
 def get_folder_profile_path():
     return str(Path.cwd())
 

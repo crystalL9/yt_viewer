@@ -45,7 +45,7 @@ def watch_random(driver,quantity):
                     element.click()
                 except:
                      pass
-                time.sleep(random.uniform(50, 60))
+                time.sleep(random.uniform(40, 50))
         
 
 def excute_link(link):
@@ -65,12 +65,12 @@ def watch_first(driver,keywords,start_time,end_time):
 
 
 
-if __name__ == "__main__":
-    video_url = "https://youtu.be/0QePKDsizWk"
-    watch_duration = 20 
-    # watch_with_duration(video_url, watch_duration)
-    #watch_random(3)
-    start_time = 5
-    end_time = 10
+# if __name__ == "__main__":
+#     video_url = "https://youtu.be/0QePKDsizWk"
+#     watch_duration = 20 
+#     # watch_with_duration(video_url, watch_duration)
+#     #watch_random(3)
+#     start_time = 5
+#     end_time = 10
 
-    watch_first("https://youtu.be/0QePKDsizWk",start_time=5,end_time=10)
+#     watch_first("https://youtu.be/0QePKDsizWk",start_time=5,end_time=10)

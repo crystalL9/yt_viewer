@@ -1,5 +1,5 @@
 from selenium.webdriver.chrome.options import Options
-from selenium import webdriver
+# from selenium import webdriver
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 import time
 from seleniumwire import webdriver
@@ -13,8 +13,13 @@ class ChromeDriver:
         options.add_argument("--disable-extensions")
         options.add_argument("--disable-application-cache")
         options.add_argument('--hide-crash-restore-bubble')
-        options.add_argument(position)
-        driver = webdriver.Chrome(options=options,executable_path='chromedriver_c.exe')
+        
+        driver = webdriver.Chrome(options=options,executable_path='chromedriver.exe')
+        driver.set_window_size(800, 600)
+        xy=position
+        x=int(position.split('|')[0])
+        y=int(position.split('|')[1])
+        driver.set_window_position(x, y)
         driver.get('https://www.youtube.com/')
         return driver  
     
@@ -28,6 +33,7 @@ class ChromeDriver:
         options.add_argument("--disable-popup-blocking")
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-extensions")
+        
         options.add_argument("--disable-application-cache")
         options.add_argument('--hide-crash-restore-bubble')
         options.add_argument(f"--user-data-dir={profile_path}")
@@ -57,7 +63,9 @@ class ChromeDriver:
             }
         
         
-        driver = webdriver.Chrome('chromedriver_c.exe',seleniumwire_options=proxy_options, chrome_options=options)
+        driver = webdriver.Chrome(seleniumwire_options=proxy_options, chrome_options=options,executable_path='chromedriver.exe')
+        driver.set_window_size(800, 600)
+        driver.set_window_position(10, 0)
         driver.get('https://www.youtube.com/')
         time.sleep(1)
         return driver

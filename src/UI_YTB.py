@@ -10,6 +10,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import profiles
 import subprocess
 import sys
+import threading
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -319,70 +320,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        self.bt_pause.clicked.connect(self.stop)
-        self.bt_import_proxy.clicked.connect(self.input_proxy)
-        self.bt_open_profiles.clicked.connect(self.open_folder)
-        self.bt_import_mail.clicked.connect(self.input_mail)
-        self.bt_login_mail.clicked.connect(self.create_profile)
-        self.bt_mail_error.clicked.connect(self.mail_error)
-        self.bt_remove_history.clicked.connect(self.delete_history)
-        self.bt_mail_error.clicked.connect(self.mail_error)
-        self.bt_import_link.clicked.connect(self.input_link)
-        self.bt_import_key.clicked.connect(self.input_keyword)
-        self.bt_running.clicked.connect(self.watch_video)
-        self.bt_exit.clicked.connect(self.exit)
-        self.bt_login_mail_error.clicked.connect(self.create_profile_error)
-    def open_folder(self):
-        try:
-            if sys.platform == 'win32':
-                subprocess.Popen(['explorer', 'Profiles'], shell=True)
-            else:
-                subprocess.Popen(['xdg-open', 'Profiles'])
-        except Exception as e:
-         print(f"Error: {e}")
-    def stop(self):
-        profiles.write_flag('0')
-    def input_proxy(self):
-        profiles.open_file_with_notepad('proxy.txt')
-    def input_keyword(self):
-        profiles.open_file_with_notepad('keyword.txt')
-    def input_link(self):
-        profiles.open_file_with_notepad('link-video.txt')
-    def input_mail(self):
-        profiles.open_file_with_notepad('gmail.txt')
-    def mail_error(self):
-        profiles.open_file_with_notepad('mail_error.txt')
-    def delete_history(self):
-        profiles.action_watch_or_del(mode=4,end_time=10,start_time=20,num_threads=0)
-    def exit(self):
-        sys.exit()
-    def watch_video(self):
-        numthreads = self.spb_num_thread.value()
-        timedelay = self.spb_time_delay.value()
-        startime= self.spb_time_view.value() - timedelay
-        endtime= self.spb_time_view.value() + timedelay
-        if self.rd_random_view_video.isChecked():
-            profiles.action_watch_or_del(mode=1,end_time=endtime,start_time=startime,num_threads=numthreads)
-        if self.rd_search_video.isChecked():
-            profiles.action_watch_or_del(mode=2,end_time=endtime,start_time=startime,num_threads=numthreads)
-        if self.rd_direct_video.isChecked():
-            profiles.action_watch_or_del(mode=3,end_time=endtime,start_time=startime,num_threads=numthreads)
-    def create_profile(self):
-        numthreads = self.spb_num_thread.value()
-        print(numthreads)
-        if self.rd_yes_proxy.isChecked():
-            useproxy=1
-        else:
-            useproxy=0
-        profiles.action_create(use_proxy=useproxy,numthread=numthreads)
-    def create_profile_error(self):
-        numthreads = self.spb_num_thread.value()
-        print(numthreads)
-        if self.rd_yes_proxy.isChecked():
-            useproxy=1
-        else:
-            useproxy=0
-        profiles.action_create_forerror(use_proxy=useproxy,numthread=numthreads)
+        
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
