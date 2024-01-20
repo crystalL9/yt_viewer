@@ -55,14 +55,28 @@ def excute_link(link):
 # tìm kiếm video đầu tiên 
 def watch_first(driver,keywords,start_time,end_time):
     for keyword in keywords:
-        link_search=f"https://www.youtube.com/results?search_query={keyword}"
-        driver.get(link_search)
-        video_title_elements = driver.find_elements(By.XPATH, '//a[@id="video-title"]')
-        for element in video_title_elements:
-                    link = excute_link(element.get_attribute("href"))
-                    watch_with_duration(driver,link,start_time,end_time)
-                    break
-
+        time.sleep(1)
+        search_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,'//div[@class="mobile-topbar-header-content non-search-mode cbox"]/button[@aria-label="Search YouTube"]/c3-icon')))
+        search_button.click()
+        time.sleep(1)
+        search_field = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,'//input[@name="search"]')))
+        search_field.send_keys(keyword)
+        time.sleep(1)
+        print('and now we perform the search, by sending Enter key')
+        search_field.send_keys(Keys.ENTER) 
+        thumbnail_img = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//img[contains(@class, "cover video-thumbnail-img yt-core-image--fill-parent-height yt-core-image--fill-parent-width yt-core-image yt-core-image--content-mode-scale-aspect-fill yt-core-image--loaded")]'))
+        )
+        thumbnail_img.click()
+        random_time=random.randint(start_time, end_time)
+        print(random_time)
+        time.sleep(random_time/2)
+        scroll_distance = random.uniform(0.5, 1.0)
+        driver.execute_script(f"window.scrollTo(0, document.body.scrollHeight * {scroll_distance});")
+        time.sleep(1)
+        driver.execute_script("window.scrollTo(0, 0);")
+        time.sleep(random_time/2)
+        time.sleep(2)
 
 
 # if __name__ == "__main__":

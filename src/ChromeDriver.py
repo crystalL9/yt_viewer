@@ -1,20 +1,26 @@
 from selenium.webdriver.chrome.options import Options
-# from selenium import webdriver
+from selenium import webdriver as nopx
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 import time
 from seleniumwire import webdriver
 class ChromeDriver:
     def driver_no_proxy(profile_path,position):
         options = Options()
+        options.add_argument('--no-sandbox')
         options.add_argument("--disable-popup-blocking")
         options.add_argument("--disable-notifications")
-        options.add_argument(f"--user-data-dir={profile_path}")
-        options.add_argument('--lang=en')
         options.add_argument("--disable-extensions")
+        options.add_argument("--user-agent=Mozilla/5.0 (Linux; Android 7.0; SM-A310F Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36 OPR/42.7.2246.114996")
         options.add_argument("--disable-application-cache")
         options.add_argument('--hide-crash-restore-bubble')
-        
-        driver = webdriver.Chrome(options=options,executable_path='chromedriver.exe')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-logging')
+        options.add_argument(f"--user-data-dir={profile_path}")
+        options.add_argument('--lang=en')
+        driver = nopx.Chrome(options=options,executable_path='chromedriver.exe')
         driver.set_window_size(800, 600)
         xy=position
         x=int(position.split('|')[0])
@@ -30,12 +36,18 @@ class ChromeDriver:
         hostname = proxy.split(':')[0]
         port = proxy.split(':')[1]
         options = Options()
+        options.add_argument('--no-sandbox')
         options.add_argument("--disable-popup-blocking")
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-extensions")
-        
+        options.add_argument("--user-agent=Mozilla/5.0 (Linux; Android 7.0; SM-A310F Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36 OPR/42.7.2246.114996")
         options.add_argument("--disable-application-cache")
         options.add_argument('--hide-crash-restore-bubble')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-logging')
         options.add_argument(f"--user-data-dir={profile_path}")
         options.add_argument('--lang=en')
         options.add_argument(position)

@@ -1,0 +1,6 @@
+[42072:43496:0121/061046.517:WARNING:chrome_main_delegate.cc(667)] This is Chrome version 120.0.6099.225 (not a warning)
+[42072:43496:0121/061046.619:INFO:policy_logger.cc(144)] :components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc(168) Starting CBCM Controller Initialization
+[42072:43496:0121/061046.619:INFO:policy_logger.cc(144)] :components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc(196) No machine level policy manager exists.
+[42072:43496:0121/061048.215:INFO:CONSOLE(1)] "The key "" is not recognized and ignored.", source: https://m.youtube.com/ (1)
+[42072:43496:0121/061101.999:INFO:primary_account_manager.cc(599)] Revoking all refresh tokens on server. Reason: sign out; source: 25
+[42072:43496:0121/061104.159:WARNING:pref_notifier_impl.cc(41)] Pref observer for media_router.cast_allow_all_ips found at shutdown.

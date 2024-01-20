@@ -23,6 +23,7 @@ queue_keyword = Queue()
 lock = threading.Lock()
 queue_proxy= Queue()
 flag='1'
+all_driver = []
 def refresh_():
     queue_mail.clear()
     queue_profile.clear()
@@ -30,7 +31,7 @@ def refresh_():
 def read_file_to_queue(file_path, queue):
     unique_values = set()
 
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r',encoding='utf-8') as file:
         for line in file:
             value = line.strip()
             if value not in unique_values:
@@ -48,7 +49,7 @@ def get_all_profile(folder_path,queue):
 def read_file_to_array(file_path):
     lines = []
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r',encoding='utf-8') as file:
             for line in file:
                 lines.append(line.strip())
     except FileNotFoundError:
@@ -60,6 +61,7 @@ def read_file_to_array(file_path):
 
 def create_profile_from_file(queue,use_proxy,queue_position):
         account = queue.get()
+        global all_driver
         try:
             proxy = queue_proxy.get()
         except:
@@ -79,8 +81,10 @@ def create_profile_from_file(queue,use_proxy,queue_position):
                 if use_proxy==1:
                     
                     driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                    all_driver.append(driver)
                 else:
                     driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                    all_driver.append(driver)
                     proxy=None
                 try:
                     try:
@@ -134,6 +138,7 @@ def create_profile_from_file_noproxy(queue,queue_position):
         password = account.split('|')[1]
         recover_mail = account.split('|')[2]
         profile_path = get_folder_profile_path() + '\\' + f'Profiles\\{str(username)}'
+        global all_driver
         if path.exists(profile_path):
             
             print(f"Profile {username} Exist !")
@@ -142,6 +147,7 @@ def create_profile_from_file_noproxy(queue,queue_position):
             flag=read_flag()
             if flag!='0':
                 driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                all_driver.append(driver)
                 proxy=None
                 try:
                     try:
@@ -278,6 +284,7 @@ def login(driver,username,password):
         return driver.current_url
 
 def manager_profiles_watch_search_nora(queue,keywords,start_time,end_time,queue_position):
+    global all_driver
     flag=read_flag()
     if flag=='1':
         profile_name = queue.get()
@@ -290,7 +297,8 @@ def manager_profiles_watch_search_nora(queue,keywords,start_time,end_time,queue_
             use_proxy=1
         else:
             use_proxy=0
-        while len(link_keywords) > 0:
+        a = len(link_keywords) 
+        while a > 0:
             if start_time>end_time:
                 print ("Lỗi thời gian xem")
                 break
@@ -299,26 +307,30 @@ def manager_profiles_watch_search_nora(queue,keywords,start_time,end_time,queue_
                     if use_proxy==1:
                     
                         driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                        all_driver.append(driver)
                     else:
                         driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                        all_driver.append(driver)
                     random_link= random.sample(link_keywords, random.randint(min(6,len(link_keywords)), min(8, len(link_keywords))))
-                    for _ in random_link :
-                        flag=read_flag()
-                        if flag=='0': 
+                    for keyword in random_link.copy():
+                        flag = read_flag()
+                        if flag == '0':
                             driver.quit()
                             break
                         else:
                             try:
-                                watch_video.watch_first(driver=driver,keywords=[_],start_time=start_time,end_time=end_time)
-                                
+                                if keyword in link_keywords:
+                                    watch_video.watch_first(driver=driver, keywords=[keyword], start_time=start_time, end_time=end_time)
+                                    a-=1
                             except Exception as e:
+                                
                                 print(e)
                                 pass
-                            link_keywords.remove(_)    
                     driver.quit()
 
 def manager_profiles_watch_search(queue,keywords,start_time,end_time,queue_position):
     flag=read_flag()
+    global all_driver
     if flag=='1': 
         profile_name = queue.get()
         position=queue_position.get()
@@ -330,7 +342,8 @@ def manager_profiles_watch_search(queue,keywords,start_time,end_time,queue_posit
             use_proxy=1
         else:
             use_proxy=0
-        while len(link_keywords) > 0:
+        a = len(link_keywords) 
+        while a > 0:
             if start_time>end_time:
                 print ("Lỗi thời gian xem")
                 break
@@ -339,23 +352,26 @@ def manager_profiles_watch_search(queue,keywords,start_time,end_time,queue_posit
                     if use_proxy==1:
                     
                         driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                        all_driver.append(driver)
                     else:
                         driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                        all_driver.append(driver)
                     random_link= random.sample(link_keywords, random.randint(min(6,len(link_keywords)), min(8, len(link_keywords))))
                     watch_video.watch_random(driver=driver,quantity=1)
-                    for _ in random_link :
+                    for keyword in random_link.copy():
                         flag=read_flag()
                         if flag=='0': 
                             driver.quit()
                             break
                         else:
                             try:
-                                watch_video.watch_first(driver=driver,keywords=[_],start_time=start_time,end_time=end_time)
-                                
+                                watch_video.watch_first(driver=driver,keywords=[keyword],start_time=start_time,end_time=end_time)
+
                             except Exception as e:
                                 print(e)
                                 pass
-                            link_keywords.remove(_)    
+                            link_keywords.remove(keyword)
+                            a-=1    
                     driver.quit()
 def check_proxy_in_profile(folder_path):
     folder_path="Profiles"
@@ -373,6 +389,7 @@ def check_delete_in_profile(folder_path):
          return False
 def manager_profiles_watch_link_nora(queue,links,start_time,end_time,queue_position):
     flag=read_flag()
+    global all_driver
     if flag=='1':
         profile_name = queue.get()
         position = queue_position.get()
@@ -384,7 +401,8 @@ def manager_profiles_watch_link_nora(queue,links,start_time,end_time,queue_posit
             use_proxy=0
         link_keywords=links
         random.shuffle(link_keywords)
-        while len(link_keywords) > 0:
+        a=len(link_keywords)
+        while a > 0:
             if start_time>end_time:
                 print ("Lỗi thời gian xem")
                 break
@@ -394,9 +412,11 @@ def manager_profiles_watch_link_nora(queue,links,start_time,end_time,queue_posit
                     if use_proxy==1:
                     
                         driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                        all_driver.append(driver)
                     else:
                         driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
-                    for i in random_link:
+                        all_driver.append(driver)
+                    for i in random_link.copy():
                         flag=read_flag()
                         if flag=='0': 
                             driver.quit()
@@ -407,10 +427,12 @@ def manager_profiles_watch_link_nora(queue,links,start_time,end_time,queue_posit
                             except Exception as e:
                                 print(e)
                                 pass
+                            a-=1
                             link_keywords.remove(i)
                     driver.quit()
 def manager_profiles_watch_link(queue,links,start_time,end_time,queue_position):
     flag=read_flag()
+    global all_driver
     if flag=='1':
         profile_name = queue.get()
         position = queue_position.get()
@@ -422,7 +444,8 @@ def manager_profiles_watch_link(queue,links,start_time,end_time,queue_position):
             use_proxy=0
         link_keywords=links
         random.shuffle(link_keywords)
-        while len(link_keywords) > 0:
+        a=len(link_keywords)
+        while a > 0:
             if start_time>end_time:
                 print ("Lỗi thời gian xem")
                 break
@@ -432,25 +455,29 @@ def manager_profiles_watch_link(queue,links,start_time,end_time,queue_position):
                     if use_proxy==1:
                     
                         driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                        all_driver.append(driver)
                     else:
                         driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                        all_driver.append(driver)
                     watch_video.watch_random(driver=driver,quantity=1)
-                    for i in random_link:
+                    for keyword in random_link.copy():
                         flag=read_flag()
                         if flag=='0': 
                             driver.quit()
                             break
                         else:
                             try:
-                                watch_video.watch_with_duration(driver=driver,video_url=i,start_time=start_time,end_time=end_time)   
+                                watch_video.watch_with_duration(driver=driver,video_url=keyword,start_time=start_time,end_time=end_time)   
                             except Exception as e:
                                 print(e)
                                 pass
-                            link_keywords.remove(i)
+                            link_keywords.remove(keyword)
+                            a-=1
                     driver.quit()
 def manager_profiles_watch_short(queue,queue_position):
     try:
         flag=read_flag()
+        global all_driver
         if flag=='1':
             profile_name = queue.get()
             position = queue_position.get()
@@ -464,8 +491,10 @@ def manager_profiles_watch_short(queue,queue_position):
                 if use_proxy==1:
                 
                     driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                    all_driver.append(driver)
                 else:
                     driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                    all_driver.append(driver)
                 watch_video.watch_random(driver=driver,quantity=1)
                 driver.quit()
     except Exception as e:
@@ -474,6 +503,7 @@ def manager_profiles_watch_short(queue,queue_position):
 
 def manager_profiles_delete_history(queue,queue_position):
     flag=read_flag()
+    global all_driver
     if flag=='1':
         profile_name = queue.get()
         position = queue_position.get()
@@ -487,8 +517,10 @@ def manager_profiles_delete_history(queue,queue_position):
         if path.exists(profile_path):
             if useproxy==1:
                     driver = ChromeDriver.driver_with_proxy(profile_path=profile_path,proxy=proxy,position=position)
+                    all_driver.append(driver)
             else:
                     driver = ChromeDriver.driver_no_proxy(profile_path=profile_path,position=position)
+                    all_driver.append(driver)
             delete_history(driver,check,profile_path)
             driver.quit()
 def list_subdirectories(directory):
@@ -503,10 +535,13 @@ def delete_history(driver,check,profile_path):
     perform_actions(driver, Keys.TAB * 3)
     if check==True:
         perform_actions(driver, Keys.ENTER)
+        perform_actions(driver, Keys.TAB * 3)
+        perform_actions(driver, Keys.ENTER)
     else:
-         pass
-    perform_actions(driver, Keys.TAB * 5)
-    perform_actions(driver, Keys.ENTER)
+        perform_actions(driver, Keys.TAB * 5)
+        perform_actions(driver, Keys.ENTER)
+        pass
+    
     duong_dan1 = os.path.join(profile_path, "delete.txt")
     with open(duong_dan1, "w") as file:
             file.write("deleted")
@@ -618,6 +653,7 @@ def all_profiles_action(path_profile,queue,mode,links,keywords,start_time,end_ti
                     thread.start()
                 for thread in threads:
                     thread.join()
+    print("Done")
 def open_file_with_notepad(file_path):
     try:
         # Sử dụng subprocess để mở tệp tin bằng Notepad
@@ -721,8 +757,18 @@ def action_watch_or_del(mode,start_time,end_time,num_threads):
     path_proxy="data\proxy.txt"
     path_keyword="data\keyword.txt"
     path_link="data\link-video.txt"
-    links = read_file_to_array(file_path=path_keyword)
-    keywords = read_file_to_array(file_path=path_link)
+    keywords = read_file_to_array(file_path=path_keyword)
+    links = read_file_to_array(file_path=path_link)
     all_profiles_action(path_profile,queue_profile,mode=mode,links=links,keywords=keywords,start_time=start_time,end_time=end_time,num_threads=num_threads)
+def stop_driver():
+    global all_driver
+    print(f"số driver là {len(all_driver)}")
+
+    for i, driver in enumerate(all_driver):
+        try:
+            driver.quit()
+            print(f"quit driver {i}")
+        except Exception as e:
+            print(e)
 if __name__ == "__main__":
     action_create(numthread=1,use_proxy=1)

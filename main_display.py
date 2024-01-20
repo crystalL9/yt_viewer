@@ -6,6 +6,7 @@ from PyQt6.QtGui import QPixmap
 import sys
 from PyQt6.QtCore import QResource
 from datetime import datetime, timedelta
+from PyQt6.QtCore import QResource, QThread, pyqtSignal
 import pytz
 from src.activate import *
 from dateutil import parser
@@ -18,28 +19,60 @@ import threading
 import os
 import ctypes 
 timezone = pytz.timezone('Asia/Ho_Chi_Minh')
-time_activate = datetime(year=2024, month=1, day=20, hour=21, minute=45, tzinfo=timezone)
+time_activate = datetime(year=2024, month=1, day=21, hour=21, minute=45, tzinfo=timezone)
+
+class WorkerThread(QThread):
+    finished = pyqtSignal()  # Tín hiệu được phát khi luồng hoàn thành
+
+    def __init__(self, target=None, args=()):
+        super(WorkerThread, self).__init__()
+        self.target = target
+        self.args = args
+
+    def run(self):
+        # Thực hiện công việc trong luồng
+        if self.target:
+            self.target(*self.args)
+
+        # Khi công việc hoàn thành, phát tín hiệu finished
+        self.finished.emit()
 def get_time_now():
     # if response.status_code == 200:
     #     data = json.loads(response.text)
     #     date_time = data['datetime']
     #     time_now  = datetime.fromisoformat(date_time)
     #     return date_time_with_timezone
-    response = requests.get("https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh")
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        date_time = data['datetime']
-        time_now  = datetime.fromisoformat(date_time)
-        return time_now
-    else:
-        response = requests.get("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Ho_Chi_Minh")
+    try:
+        response = requests.get("https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh")
         if response.status_code == 200:
             data = json.loads(response.text)
-            date_time = data['dateTime']
-            time_now  = parser.isoparse(date_time)
-            date_time_with_timezone = timezone.localize(time_now)
-            return date_time_with_timezone
+            date_time = data['datetime']
+            time_now  = datetime.fromisoformat(date_time)
+            return time_now
         else:
+            response = requests.get("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Ho_Chi_Minh")
+            if response.status_code == 200:
+                data = json.loads(response.text)
+                date_time = data['dateTime']
+                time_now  = parser.isoparse(date_time)
+                date_time_with_timezone = timezone.localize(time_now)
+                return date_time_with_timezone
+            else:
+                return datetime.now(timezone)
+    except Exception as e:
+        print(e)
+        try:
+            response = requests.get("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Ho_Chi_Minh")
+            if response.status_code == 200:
+                data = json.loads(response.text)
+                date_time = data['dateTime']
+                time_now  = parser.isoparse(date_time)
+                date_time_with_timezone = timezone.localize(time_now)
+                return date_time_with_timezone
+            else:
+                return datetime.now(timezone)
+        except Exception as e:
+            print(e)    
             return datetime.now(timezone)
 
 class Login_w(QMainWindow):
@@ -105,7 +138,7 @@ class YTB_main(QMainWindow):
             pass
     def input_mail(self):
         try:
-            profiles.open_file_with_notepad('data\gmail.txt')
+            profiles.open_file_with_notepad('data/gmail.txt')
         except:
             pass
     def mail_error(self):
@@ -116,13 +149,19 @@ class YTB_main(QMainWindow):
     def delete_history(self):
         try:
             numthreads = self.spb_num_thread.value()
-            t= threading.Thread(target=profiles.action_watch_or_del, args=(4,10,20,numthreads))
-            t.setDaemon(True)
-            t.start()
+            # t= threading.Thread(target=profiles.action_watch_or_del, args=(4,10,20,numthreads))
+            # t.setDaemon(True)
+            # t.start()
+            self.word_thread_delete = WorkerThread(target=profiles.action_watch_or_del, args=(4,10,20,numthreads))
+            self.word_thread_delete.finished.connect(self.handle_thread_finished_delete)  # Kết nối tín hiệu finished với phương thức handle_thread_finished
+            self.word_thread_delete.start()
+            self.word_thread_view.wait()
         except:
             pass
     def exit(self):
-        sys.exit()
+        #sys.exit()
+        profiles.stop_driver()
+        QtCore.QCoreApplication.quit()
     def watch_video(self):
         numthreads = self.spb_num_thread.value()
         timedelay = self.spb_time_delay.value()
@@ -159,9 +198,13 @@ class YTB_main(QMainWindow):
                 useproxy=1
             else:
                 useproxy=0
-            t= threading.Thread(target=profiles.action_create, args=(useproxy,numthreads))
-            t.setDaemon(True)
-            t.start()
+            # t= threading.Thread(target=profiles.action_create, args=(useproxy,numthreads))
+            # t.setDaemon(True)
+            # t.start()
+            self.word_thread = WorkerThread(target=profiles.action_create, args=(useproxy, numthreads))
+            self.word_thread.finished.connect(self.handle_thread_finished)  # Kết nối tín hiệu finished với phương thức handle_thread_finished
+            self.word_thread.start()
+            self.word_thread_view.wait()
         except:
             pass
     def create_profile_error(self):
@@ -172,15 +215,26 @@ class YTB_main(QMainWindow):
                 useproxy=1
             else:
                 useproxy=0
-            t= threading.Thread(target=profiles.action_create_forerror, args=(useproxy,numthreads))
-            t.setDaemon(True)
-            t.start()
+            # t= threading.Thread(target=profiles.action_create_forerror, args=(useproxy,numthreads))
+            # t.setDaemon(True)
+            # t.start()
+            self.word_thread_err = WorkerThread(target=profiles.action_create_forerror, args=(useproxy, numthreads))
+            self.word_thread_err.finished.connect(self.handle_thread_finished)  # Kết nối tín hiệu finished với phương thức handle_thread_finished
+            self.word_thread_err.start()
+            self.word_thread_view.wait()
         except:
             pass
-class Activate_Win(QMainWindow):
-    def __init__(self):
-        super(Activate_Win, self).__init__()
-        loadUi('activate.ui', self)
+    def handle_thread_finished(self):
+        self.show_message_box()
+
+    def show_message_box(self):
+        QMessageBox.information(self, "Profiles", "Đã tạo profile và login xong.")
+    def handle_thread_finished_delete(self):
+        QMessageBox.information(self, "Profiles", "Đã xóa lịch sử web.")
+    def handle_thread_finished_view(self):
+        self.show_message_box_view()
+    def show_message_box_view(self):
+        QMessageBox.information(self, "View YTB", "Đã xem hết video.")
 if __name__ == "__main__":
     folder_path = "Profiles"
     if os.path.exists(folder_path) and os.path.isdir(folder_path):
